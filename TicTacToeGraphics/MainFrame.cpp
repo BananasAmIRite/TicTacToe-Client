@@ -20,6 +20,9 @@ MainFrame::MainFrame(): wxFrame(NULL, wxID_ANY, wxS("Tic Tac Toe")) {
 
 	SetSizer(sizer); 
 
+	// Centre(); 
+	// wxPanel panel = new wxPanel(this); 
+
 	Game* game = new Game; 
 
 	displayPanel->start(game);
