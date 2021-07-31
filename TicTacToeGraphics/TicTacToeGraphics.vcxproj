@@ -121,7 +121,7 @@
       </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
@@ -144,19 +144,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
-    <ClCompile Include="DisplayPanel.cpp" />
-    <ClCompile Include="Game.cpp" />
-    <ClCompile Include="GameInput.cpp" />
-    <ClCompile Include="MainFrame.cpp" />
-    <ClCompile Include="TicTacToeInput.cpp" />
     <ClCompile Include="session.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DisplayPanel.h" />
-    <ClInclude Include="Game.h" />
-    <ClInclude Include="GameInput.h" />
-    <ClInclude Include="MainFrame.h" />
-    <ClInclude Include="TicTacToeInput.h" />
     <ClInclude Include="session.h" />
     <ClInclude Include="wxPrecomp.h" />
   </ItemGroup>
