@@ -22,6 +22,7 @@ class session : public std::enable_shared_from_this<session>
         websocket::stream<beast::tcp_stream> ws_;
         beast::flat_buffer buffer_;
         std::string host_;
+        bool open; 
 
         // private event handlers that link to public listeners
         void on_resolve(beast::error_code, tcp::resolver::results_type); 
@@ -50,7 +51,7 @@ class session : public std::enable_shared_from_this<session>
         // Start the asynchronous operation
         void run(char const*, char const*);
 
-        void send(string);
+        void write(string);
         void setResolveHandler(function<void(beast::error_code, tcp::resolver::results_type)>); 
         void setConnectHandler(function<void(beast::error_code, tcp::resolver::results_type::endpoint_type)>); 
         void setHandshakeHandler(function<void(beast::error_code)>); 
@@ -58,6 +59,7 @@ class session : public std::enable_shared_from_this<session>
         void setReadHandler(function<void(beast::error_code, std::size_t, beast::flat_buffer)>); 
         void setCloseHandler(function<void(beast::error_code)>); 
         void setFailHandler(function<void(beast::error_code, char const*)>);
+        bool isClosed(); 
 };
 
 #endif

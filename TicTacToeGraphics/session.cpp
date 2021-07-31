@@ -1,6 +1,6 @@
 #include "session.h"
 
-session::session(net::io_context& ioc): resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)) {}
+session::session(net::io_context& ioc) : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)), open(false) {}
 
 void session::run(char const* host, char const* port) {
     // Save these for later
@@ -17,7 +17,7 @@ void session::run(char const* host, char const* port) {
 
 void session::on_resolve(beast::error_code ec, tcp::resolver::results_type results) {
     if (ec)
-        return fail(ec, "resolve"); 
+        return fail(ec, "resolve");
 
 
     // Set the timeout for the operation
@@ -66,7 +66,7 @@ void session::on_connect(beast::error_code ec, tcp::resolver::results_type::endp
             &session::on_handshake,
             shared_from_this()));
 
-    if (connectHandler != NULL) connectHandler(ec, ep); 
+    if (connectHandler != NULL) connectHandler(ec, ep);
 }
 
 void session::on_handshake(beast::error_code ec) {
@@ -79,18 +79,19 @@ void session::on_handshake(beast::error_code ec) {
     //    beast::bind_front_handler(
     //        &session::on_write,
     //        shared_from_this()));
-    cout << "e" << endl; 
-        ws_.async_read( // start the read loop
+    open = true;
+    ws_.async_read( // start the read loop
         buffer_,
         beast::bind_front_handler(
             &session::on_read,
             shared_from_this()));
 
-    if (handshakeHandler != NULL) handshakeHandler(ec); 
+    if (handshakeHandler != NULL) handshakeHandler(ec);
 }
 
 void session::fail(beast::error_code ec, char const* err) {
-    if (failHandler != NULL) failHandler(ec, err); 
+    if (failHandler != NULL) failHandler(ec, err);
+    open = false;
 }
 
 void session::on_write(
@@ -106,7 +107,7 @@ void session::on_write(
     //    beast::bind_front_handler(
     //        &session::on_read,
     //        shared_from_this()));
-    if (writeHandler != NULL) writeHandler(ec, bytes_transferred); 
+    if (writeHandler != NULL) writeHandler(ec, bytes_transferred);
 }
 
 void session::on_read(
@@ -123,14 +124,16 @@ void session::on_read(
     //    beast::bind_front_handler(
     //        &session::on_close,
     //        shared_from_this()));
-    if (readHandler != NULL) readHandler(ec, bytes_transferred, buffer_); 
-    
+    if (readHandler != NULL) readHandler(ec, bytes_transferred, buffer_);
+
+    buffer_.clear();
+
     // keep reading :D
     ws_.async_read(
-    buffer_,
-    beast::bind_front_handler(
-        &session::on_read,
-        shared_from_this()));
+        buffer_,
+        beast::bind_front_handler(
+            &session::on_read,
+            shared_from_this()));
 }
 
 void session::on_close(beast::error_code ec)
@@ -142,37 +145,39 @@ void session::on_close(beast::error_code ec)
 
     // The make_printable() function helps print a ConstBufferSequence
     //std::cout << beast::make_printable(buffer_.data()) << std::endl;
-    if (closeHandler != NULL) closeHandler(ec); 
-}
-
-void session::send(string e) {
-    // Send the message
-    ws_.async_write(
-        net::buffer(e),
-        beast::bind_front_handler(
-            &session::on_write,
-            shared_from_this()));
+    if (closeHandler != NULL) closeHandler(ec);
 }
 
 // public event handlers
 void session::setResolveHandler(function<void(beast::error_code, tcp::resolver::results_type)> handler) {
-    resolveHandler = handler; 
+    resolveHandler = handler;
 }
 void session::setConnectHandler(function<void(beast::error_code, tcp::resolver::results_type::endpoint_type)> handler) {
-    connectHandler = handler; 
+    connectHandler = handler;
 }
 void session::setHandshakeHandler(function<void(beast::error_code)> handler) {
-    handshakeHandler = handler; 
+    handshakeHandler = handler;
 }
 void session::setWriteHandler(function<void(beast::error_code, std::size_t)> handler) {
-    writeHandler = handler; 
+    writeHandler = handler;
 }
 void session::setReadHandler(function<void(beast::error_code, std::size_t, beast::flat_buffer)> handler) {
-    readHandler = handler; 
+    readHandler = handler;
 }
 void session::setCloseHandler(function<void(beast::error_code)> handler) {
     closeHandler = handler;
 }
 void session::setFailHandler(function<void(beast::error_code, char const*)> handler) {
-    failHandler = handler; 
+    failHandler = handler;
+}
+
+void session::write(string text) {
+    beast::error_code ec;
+    size_t bt = ws_.write(net::buffer(text), ec);
+
+    on_write(ec, bt);
+}
+
+bool session::isClosed() {
+    return !open;
 }
