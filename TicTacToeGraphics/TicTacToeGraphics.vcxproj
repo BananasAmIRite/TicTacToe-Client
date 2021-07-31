@@ -149,6 +149,7 @@
     <ClCompile Include="GameInput.cpp" />
     <ClCompile Include="MainFrame.cpp" />
     <ClCompile Include="TicTacToeInput.cpp" />
+    <ClCompile Include="session.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DisplayPanel.h" />
@@ -156,6 +157,7 @@
     <ClInclude Include="GameInput.h" />
     <ClInclude Include="MainFrame.h" />
     <ClInclude Include="TicTacToeInput.h" />
+    <ClInclude Include="session.h" />
     <ClInclude Include="wxPrecomp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

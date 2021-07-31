@@ -2,6 +2,7 @@
 #define DISPLAYPANEL_H
 #include "wxPrecomp.h"
 #include "Game.h"
+#include "session.h"
 
 enum class DisplayState {
 	QUEUE, 
@@ -12,7 +13,7 @@ enum class DisplayState {
 
 class DisplayPanel: public wxPanel {
 public: 
-	DisplayPanel(wxWindow*); 
+	DisplayPanel(wxFrame*); 
 	string move(string); // sends a move to server; returns an error message to display if unsuccessful, otherwise empty string
 	//
 	void start(Game*); // Initiates game start; 
@@ -21,12 +22,17 @@ public:
 	void onPaintEvent(wxPaintEvent&); 
 	void setDisplayState(DisplayState); 
 	void onResize(wxSizeEvent&); 
+	void connect(); 
 private:
 	Game* game = NULL; 
 	DisplayState displayState; 
+	shared_ptr<session> wsSession; 
+	wxFrame* parentFrame; 
 	void drawLetter(int, int, wxPaintDC&, string letter);
 	void drawLines(wxPaintDC&);
-	string outcome; // outcome of a match is stored to render 
+	void handleMessage(beast::error_code, std::size_t, beast::flat_buffer);
+	void handleFail(beast::error_code, char const*); 
+	string outcome; // outcome of a match is stored to render
 	//void setValue(string, string); // sets a value LOCALLY; This will pretty much always succeed unless there is no Game pointer available
 };
 

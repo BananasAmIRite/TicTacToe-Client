@@ -2,9 +2,28 @@
 
 
 
-DisplayPanel::DisplayPanel(wxWindow* parent = NULL): game(NULL), displayState(DisplayState::CONNECTING), wxPanel(parent) {
+DisplayPanel::DisplayPanel(wxFrame* parent = NULL): game(NULL), displayState(DisplayState::CONNECTING), wxPanel(parent), parentFrame(parent) {
 	Bind(wxEVT_PAINT, &DisplayPanel::onPaintEvent, this);
 	Bind(wxEVT_SIZE, &DisplayPanel::onResize, this); 
+
+	// connect(); 
+}
+void DisplayPanel::connect() {
+	parentFrame->SetStatusText("Connecting...");
+	// start the websocket session
+	net::io_context ioc; 
+	wsSession = make_shared<session>(ioc); 
+
+	// setup events
+	wsSession->setHandshakeHandler([this](beast::error_code ec) {
+		parentFrame->SetStatusText("Connected!");
+	});
+	wsSession->setFailHandler([this](beast::error_code ec, const char* err) {handleFail(ec, err); }); // lambda cuz I want to retain `this`
+	// wsSession->setReadHandler([this](beast::error_code ec, size_t bt, boost::beast::flat_buffer buf) {handleMessage(ec, bt, buf); });
+	
+	wsSession->run("localhost", "2000"); 
+
+	ioc.run(); 
 }
 
 string DisplayPanel::move(string position) {
@@ -120,4 +139,12 @@ void DisplayPanel::setDisplayState(DisplayState state) {
 	displayState = state; 
 	Refresh(); // refresh and update every single time display state is modified
 	Update();
+}
+
+void DisplayPanel::handleMessage(beast::error_code ec, std::size_t bytes_transferred, beast::flat_buffer buf) {
+	parentFrame->SetStatusText("messages are so cool amirite: " + to_string(bytes_transferred)); 
+}
+
+void DisplayPanel::handleFail(beast::error_code ec,  char const* err) {
+	parentFrame->SetStatusText("Error: " + string(err) + " with error code: " + to_string(ec.value()) + ". Reason: " + ec.message());
 }

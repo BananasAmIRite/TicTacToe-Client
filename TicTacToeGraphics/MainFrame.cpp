@@ -37,3 +37,7 @@ MainFrame::MainFrame(): wxFrame(NULL, wxID_ANY, wxS("Tic Tac Toe")) {
 void MainFrame::OnExit(wxCommandEvent& evt) {
 	Close(true); 
 }
+
+void MainFrame::connectSocket() {
+	displayPanel->connect(); 
+}

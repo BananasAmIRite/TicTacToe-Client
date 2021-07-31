@@ -14,5 +14,7 @@ bool App::OnInit() {
 
 	// frame->AddChild(panel);
 
+	frame->connectSocket(); 
+
 	return true;
 } 
