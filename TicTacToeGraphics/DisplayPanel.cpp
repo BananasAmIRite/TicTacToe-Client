@@ -1,8 +1,11 @@
 #include "DisplayPanel.h"
 
+void run_ioc(net::io_context* ioc) {
+	// net::executor_work_guard<decltype(ioc->get_executor())> work{ ioc->get_executor() };
+	ioc->run(); 
+}
 
-
-DisplayPanel::DisplayPanel(wxFrame* parent = NULL): game(NULL), displayState(DisplayState::CONNECTING), wxPanel(parent), parentFrame(parent) {
+DisplayPanel::DisplayPanel(wxFrame* parent = NULL): game(NULL), displayState(DisplayState::CONNECTING), wxPanel(parent), parentFrame(parent), ioc() {
 	Bind(wxEVT_PAINT, &DisplayPanel::onPaintEvent, this);
 	Bind(wxEVT_SIZE, &DisplayPanel::onResize, this); 
 
@@ -11,7 +14,6 @@ DisplayPanel::DisplayPanel(wxFrame* parent = NULL): game(NULL), displayState(Dis
 void DisplayPanel::connect() {
 	parentFrame->SetStatusText("Connecting...");
 	// start the websocket session
-	net::io_context ioc; 
 	wsSession = make_shared<session>(ioc); 
 
 	// setup events
@@ -19,11 +21,13 @@ void DisplayPanel::connect() {
 		parentFrame->SetStatusText("Connected!");
 	});
 	wsSession->setFailHandler([this](beast::error_code ec, const char* err) {handleFail(ec, err); }); // lambda cuz I want to retain `this`
-	// wsSession->setReadHandler([this](beast::error_code ec, size_t bt, boost::beast::flat_buffer buf) {handleMessage(ec, bt, buf); });
+	wsSession->setReadHandler([this](beast::error_code ec, size_t bt, boost::beast::flat_buffer buf) {
+		parentFrame->SetStatusText("message: " + beast::buffers_to_string(buf.data())); 
+		});
 	
 	wsSession->run("localhost", "2000"); 
 
-	ioc.run(); 
+	f_ioc = async(launch::async, &run_ioc, &ioc); 
 }
 
 string DisplayPanel::move(string position) {
@@ -142,9 +146,13 @@ void DisplayPanel::setDisplayState(DisplayState state) {
 }
 
 void DisplayPanel::handleMessage(beast::error_code ec, std::size_t bytes_transferred, beast::flat_buffer buf) {
-	parentFrame->SetStatusText("messages are so cool amirite: " + to_string(bytes_transferred)); 
+	parentFrame->SetStatusText("message: " + beast::buffers_to_string(buf.data())); 
 }
 
 void DisplayPanel::handleFail(beast::error_code ec,  char const* err) {
 	parentFrame->SetStatusText("Error: " + string(err) + " with error code: " + to_string(ec.value()) + ". Reason: " + ec.message());
+}
+
+DisplayPanel::~DisplayPanel() {
+	ioc.stop(); // stop the io_context event process or else program can't exit :P
 }

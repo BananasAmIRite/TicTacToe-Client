@@ -79,7 +79,6 @@ void session::on_handshake(beast::error_code ec) {
     //    beast::bind_front_handler(
     //        &session::on_write,
     //        shared_from_this()));
-    cout << "e" << endl; 
         ws_.async_read( // start the read loop
         buffer_,
         beast::bind_front_handler(

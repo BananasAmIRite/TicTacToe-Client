@@ -14,6 +14,7 @@ enum class DisplayState {
 class DisplayPanel: public wxPanel {
 public: 
 	DisplayPanel(wxFrame*); 
+	~DisplayPanel(); 
 	string move(string); // sends a move to server; returns an error message to display if unsuccessful, otherwise empty string
 	//
 	void start(Game*); // Initiates game start; 
@@ -28,11 +29,13 @@ private:
 	DisplayState displayState; 
 	shared_ptr<session> wsSession; 
 	wxFrame* parentFrame; 
+	net::io_context ioc; 
 	void drawLetter(int, int, wxPaintDC&, string letter);
 	void drawLines(wxPaintDC&);
 	void handleMessage(beast::error_code, std::size_t, beast::flat_buffer);
 	void handleFail(beast::error_code, char const*); 
 	string outcome; // outcome of a match is stored to render
+	future<void> f_ioc; 
 	//void setValue(string, string); // sets a value LOCALLY; This will pretty much always succeed unless there is no Game pointer available
 };
 
