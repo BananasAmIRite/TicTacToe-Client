@@ -27,7 +27,7 @@ void DisplayPanel::connect() {
 		handleMessage(ec, bt, buf); 
 		});
 	
-	wsSession->run("98.114.103.50", "2000"); 
+	wsSession->run("localhost", "2000"); 
 
 	f_ioc = async(launch::async, &run_ioc, &ioc); 
 }
