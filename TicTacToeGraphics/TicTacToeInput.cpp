@@ -7,7 +7,7 @@ TicTacToeInput::TicTacToeInput(wxWindow* parent, DisplayPanel* panel, wxStaticTe
 }
 void TicTacToeInput::onEvent(wxCommandEvent& evt, GameInput* input) {
 	string line1 = GetLineText(0); // first line of text
-	DiscardEdits(); 
-	string err = dPanel->move(line1); 
+	ChangeValue(""); 
+	string err = dPanel->sendMove(line1); 
 	if (errorText != NULL) errorText->SetLabelText(err); 
 }

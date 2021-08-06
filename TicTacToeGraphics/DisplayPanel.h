@@ -15,9 +15,9 @@ class DisplayPanel: public wxPanel {
 public: 
 	DisplayPanel(wxFrame*); 
 	~DisplayPanel(); 
-	string move(string); // sends a move to server; returns an error message to display if unsuccessful, otherwise empty string
-	//
-	void start(Game*); // Initiates game start; 
+	string sendMove(string); // sends a move to server; returns an error message to display if unsuccessful, otherwise empty string
+	void move(string, string); // moves locally and updates board
+	void start(); // Initiates game start; 
 	void end(string); // Displays game end; takes in "X", "O", or "TIE"; This will also deallocate the Game pointer
 	void queue(); // displays a queue screen; Will not be used yet
 	void onPaintEvent(wxPaintEvent&); 

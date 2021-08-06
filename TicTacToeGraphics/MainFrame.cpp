@@ -23,13 +23,13 @@ MainFrame::MainFrame(): wxFrame(NULL, wxID_ANY, wxS("Tic Tac Toe")) {
 	// Centre(); 
 	// wxPanel panel = new wxPanel(this); 
 
-	Game* game = new Game; 
+	//Game* game = new Game; 
 
-	displayPanel->start(game);
-	game->setPlayerType("X"); 
-	displayPanel->move("11"); 
-	displayPanel->move("12");
-	displayPanel->move("23");
+	//displayPanel->start(game);
+	//game->setPlayerType("X"); 
+	//displayPanel->move("11"); 
+	//displayPanel->move("12");
+	//displayPanel->move("23");
 
 	// displayPanel->end("TIE"); 
 }

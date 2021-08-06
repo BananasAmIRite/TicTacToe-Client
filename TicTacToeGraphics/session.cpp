@@ -123,6 +123,8 @@ void session::on_read(
     //        &session::on_close,
     //        shared_from_this()));
     if (readHandler != NULL) readHandler(ec, bytes_transferred, buffer_); 
+
+    buffer_.clear(); 
     
     // keep reading :D
     ws_.async_read(

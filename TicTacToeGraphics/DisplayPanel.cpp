@@ -1,4 +1,5 @@
 #include "DisplayPanel.h"
+#include "Utils.h"
 
 void run_ioc(net::io_context* ioc) {
 	// net::executor_work_guard<decltype(ioc->get_executor())> work{ ioc->get_executor() };
@@ -19,42 +20,51 @@ void DisplayPanel::connect() {
 	// setup events
 	wsSession->setHandshakeHandler([this](beast::error_code ec) {
 		parentFrame->SetStatusText("Connected!");
+		queue(); // set display type to queue, displaying queue message
 	});
 	wsSession->setFailHandler([this](beast::error_code ec, const char* err) {handleFail(ec, err); }); // lambda cuz I want to retain `this`
 	wsSession->setReadHandler([this](beast::error_code ec, size_t bt, boost::beast::flat_buffer buf) {
-		parentFrame->SetStatusText("message: " + beast::buffers_to_string(buf.data())); 
+		handleMessage(ec, bt, buf); 
 		});
 	
-	wsSession->run("localhost", "2000"); 
+	wsSession->run("98.114.103.50", "2000"); 
 
 	f_ioc = async(launch::async, &run_ioc, &ioc); 
 }
 
-string DisplayPanel::move(string position) {
+string DisplayPanel::sendMove(string position) {
 	if (game == NULL || game->getPlayerType() == "") return "You are not currently in a game. ";
-	string retVal = game->setValue(position, game->getPlayerType()); 
+	wsSession->send("MOVE " + position); 
+	//string retVal = game->setValue(position, game->getPlayerType());
+	//Refresh(); // Refresh and Update are usually used to completely rerender the panel
+	//Update();
+	return "";
+}
+
+void DisplayPanel::move(string position, string plr) {
+	string retVal = game->setValue(position, plr);
 	Refresh(); // Refresh and Update are usually used to completely rerender the panel
-	Update(); 
-	return retVal; 
+	Update();
 }
 
 void DisplayPanel::queue() {
 	setDisplayState(DisplayState::QUEUE); 
 }
 
-void DisplayPanel::start(Game* g) {
+void DisplayPanel::start() {
+	game = new Game;
 	setDisplayState(DisplayState::GAME);
-	game = g; 
 }
 
 void DisplayPanel::end(string state) {
 	if (state == "X" || state == "O" || state == "TIE") { // three allowed states
-		setDisplayState(DisplayState::GAME_END);
 		if (state == "TIE") {
 			outcome = state;
 		} else {
 			outcome = state == game->getPlayerType() ? "WIN" : "LOSS"; 
 		}
+
+		setDisplayState(DisplayState::GAME_END);
 		delete game;
 	}
 }
@@ -147,6 +157,30 @@ void DisplayPanel::setDisplayState(DisplayState state) {
 
 void DisplayPanel::handleMessage(beast::error_code ec, std::size_t bytes_transferred, beast::flat_buffer buf) {
 	parentFrame->SetStatusText("message: " + beast::buffers_to_string(buf.data())); 
+	string msg = beast::buffers_to_string(buf.data()); 
+	vector<string> splitted = TTT_utils::split(msg, " ");
+
+	string request = splitted.at(0); 
+
+	if (request == "STARTGAME") {
+		start(); 
+	}
+	else if (request == "CALLMOVE") {
+		string plr = splitted.at(1);
+		string pos = splitted.at(2);
+
+		// parentFrame->SetStatusText("call move called"); 
+
+		move(pos, plr);
+	}
+	else if (request == "ENDGAME") {
+		string winState = splitted.at(1); 
+		end(winState); 
+	}
+	else if (request == "SETPLAYER") {
+		string player = splitted.at(1); 
+		game->setPlayerType(player); 
+	}
 }
 
 void DisplayPanel::handleFail(beast::error_code ec,  char const* err) {
